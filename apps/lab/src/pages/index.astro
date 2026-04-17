@@ -1,0 +1,126 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '@layouts/BaseLayout.astro';
+import EntryCard from '@components/ListView/EntryCard.astro';
+
+const allEntries = await getCollection('entries', ({ data }) => !data.draft);
+const entries = allEntries.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const allTags = [...new Set(entries.flatMap((e) => e.data.tags))].sort();
+
+const activeTag = Astro.url.searchParams.get('tag') ?? '';
+---
+
+<BaseLayout>
+  <div class="max-w-3xl mx-auto px-6 py-12">
+
+    <!-- Header -->
+    <div class="flex items-baseline justify-between mb-2">
+      <div>
+        <a href="https://brad-duhon.com" class="text-xs font-mono text-site-muted hover:text-amber-dark transition-colors">
+          brad-duhon.com ↗
+        </a>
+        <h1 class="text-2xl font-bold text-site-heading mt-1">
+          <span class="border-b-2 border-amber-primary pb-1">Lab</span>
+        </h1>
+      </div>
+      <a href="/rss.xml" class="text-xs font-mono text-site-muted hover:text-amber-dark transition-colors">
+        RSS
+      </a>
+    </div>
+    <p class="text-sm text-site-muted mb-10">
+      Security research, cloud experiments, homelab notes, and TILs.
+      No rigid categories - tags do the sorting.
+    </p>
+
+    <!-- Pagefind search -->
+    <div id="search" class="mb-8"></div>
+
+    <!-- Tag filter pills -->
+    <div class="flex flex-wrap gap-2 mb-8" id="tag-filters">
+      <button
+        data-tag=""
+        class="tag-pill text-xs font-mono px-3 py-1 rounded border transition-colors border-amber-primary bg-amber-primary text-white"
+      >
+        All
+      </button>
+      {allTags.map((tag) => (
+        <button
+          data-tag={tag}
+          class="tag-pill text-xs font-mono px-3 py-1 rounded border transition-colors border-amber-light text-site-muted hover:border-amber-primary hover:text-amber-dark"
+        >
+          {tag}
+        </button>
+      ))}
+    </div>
+
+    <!-- Entry list -->
+    <div class="grid gap-8" id="entry-list">
+      {entries.map((entry, i) => (
+        <EntryCard
+          title={entry.data.title}
+          description={entry.data.description}
+          date={entry.data.date}
+          tags={entry.data.tags}
+          slug={entry.slug}
+          featured={i === 0}
+        />
+      ))}
+    </div>
+
+  </div>
+</BaseLayout>
+
+<!-- Pagefind UI -->
+<link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
+<script src="/pagefind/pagefind-ui.js" is:inline></script>
+<script is:inline>
+  window.addEventListener('DOMContentLoaded', () => {
+    if (window.PagefindUI) {
+      new PagefindUI({
+        element: '#search',
+        showSubResults: false,
+        resetStyles: false,
+      });
+    }
+  });
+</script>
+
+<!-- Tag filter logic -->
+<script define:vars={{ activeTag }}>
+  const pills = document.querySelectorAll('.tag-pill');
+  const cards = document.querySelectorAll('.entry-card');
+  let current = activeTag;
+
+  function applyFilter(tag) {
+    current = tag;
+
+    pills.forEach((pill) => {
+      const isActive = pill.dataset.tag === tag;
+      pill.classList.toggle('border-amber-primary', isActive);
+      pill.classList.toggle('bg-amber-primary', isActive);
+      pill.classList.toggle('text-white', isActive);
+      pill.classList.toggle('border-amber-light', !isActive);
+      pill.classList.toggle('text-site-muted', !isActive);
+    });
+
+    cards.forEach((card) => {
+      const tags = card.dataset.tags ? card.dataset.tags.split(',') : [];
+      card.style.display = !tag || tags.includes(tag) ? '' : 'none';
+    });
+
+    const url = new URL(window.location);
+    tag ? url.searchParams.set('tag', tag) : url.searchParams.delete('tag');
+    window.history.replaceState({}, '', url);
+  }
+
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => applyFilter(pill.dataset.tag ?? ''));
+  });
+
+  if (current) applyFilter(current);
+</script>

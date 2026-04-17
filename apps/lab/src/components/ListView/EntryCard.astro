@@ -1,0 +1,40 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  tags: string[];
+  slug: string;
+  featured?: boolean;
+}
+
+const { title, description, date, tags, slug, featured = false } = Astro.props;
+
+const formatted = date.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'short', day: 'numeric',
+});
+---
+
+<article
+  data-tags={tags.join(',')}
+  class={`entry-card border-l-2 pl-4 py-2 transition-colors ${featured ? 'border-amber-primary' : 'border-amber-light hover:border-amber-primary'}`}
+>
+  <a href={`/${slug}`} class="block group">
+    <h2 class="text-base font-semibold text-site-heading group-hover:text-amber-dark transition-colors leading-snug mb-1">
+      {title}
+    </h2>
+    <time class="text-xs font-mono text-site-muted block mb-2">{formatted}</time>
+    <p class="text-sm text-site-text leading-relaxed mb-3">{description}</p>
+    <ul class="flex flex-wrap gap-1.5">
+      {tags.map((tag) => (
+        <li class="text-xs font-mono bg-amber-light text-amber-dark px-2 py-0.5 rounded">
+          {tag}
+        </li>
+      ))}
+    </ul>
+  </a>
+</article>

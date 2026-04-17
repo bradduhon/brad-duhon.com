@@ -1,0 +1,28 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+import { getCollection } from 'astro:content';
+import EntryLayout from '@layouts/EntryLayout.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('entries', ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<EntryLayout
+  title={entry.data.title}
+  description={entry.data.description}
+  date={entry.data.date}
+  tags={entry.data.tags}
+>
+  <Content />
+</EntryLayout>

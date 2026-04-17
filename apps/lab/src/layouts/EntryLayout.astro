@@ -1,0 +1,53 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  date: Date;
+  tags: string[];
+}
+
+const { title, description, date, tags } = Astro.props;
+
+const formatted = date.toLocaleDateString('en-US', {
+  year: 'numeric', month: 'long', day: 'numeric',
+});
+---
+
+<BaseLayout title={`${title} - Lab`} description={description}>
+  <div class="max-w-3xl mx-auto px-6 py-12">
+    <nav class="mb-10">
+      <a href="/" class="text-sm text-amber-dark hover:text-amber-dark transition-colors font-medium">
+        ← Lab
+      </a>
+    </nav>
+
+    <header class="mb-10 pb-8 border-b border-amber-light">
+      <h1 class="text-3xl font-bold text-site-heading leading-snug mb-4">{title}</h1>
+      <div class="flex flex-wrap items-center gap-4">
+        <time class="text-sm font-mono text-site-muted">{formatted}</time>
+        <ul class="flex flex-wrap gap-2">
+          {tags.map((tag) => (
+            <li>
+              <a
+                href={`/?tag=${tag}`}
+                class="text-xs font-mono bg-amber-light text-amber-dark px-2 py-0.5 rounded hover:bg-amber-primary hover:text-white transition-colors"
+              >
+                {tag}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </header>
+
+    <article class="prose prose-stone max-w-none prose-headings:text-site-heading prose-a:text-amber-dark prose-code:text-amber-dark prose-pre:bg-site-heading">
+      <slot />
+    </article>
+  </div>
+</BaseLayout>

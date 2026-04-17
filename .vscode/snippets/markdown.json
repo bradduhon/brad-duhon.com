@@ -1,0 +1,17 @@
+{
+  "Lab entry": {
+    "prefix": "entry",
+    "body": [
+      "---",
+      "title: \"$1\"",
+      "date: $CURRENT_YEAR-$CURRENT_MONTH-$CURRENT_DATE",
+      "tags: [$2]",
+      "description: \"$3\"",
+      "draft: true",
+      "---",
+      "",
+      "$0"
+    ],
+    "description": "New lab entry with pre-filled frontmatter. Set draft: false when ready to publish."
+  }
+}
