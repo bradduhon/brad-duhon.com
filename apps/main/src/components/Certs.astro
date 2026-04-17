@@ -1,0 +1,47 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+const certs = [
+  {
+    name: 'AWS Certified Security – Specialty',
+    issuer: 'Amazon Web Services',
+    credlyUrl: 'https://www.credly.com/badges/placeholder-1',
+  },
+  {
+    name: 'AWS Certified Solutions Architect – Professional',
+    issuer: 'Amazon Web Services',
+    credlyUrl: 'https://www.credly.com/badges/placeholder-2',
+  },
+  {
+    name: 'Certified Cloud Security Professional (CCSP)',
+    issuer: 'ISC²',
+    credlyUrl: 'https://www.credly.com/badges/placeholder-3',
+  },
+];
+---
+
+<section id="certs" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
+  <h2 class="text-2xl font-bold text-site-heading mb-8">
+    <span class="border-b-2 border-amber-primary pb-1">Certifications</span>
+  </h2>
+
+  <ul class="grid sm:grid-cols-2 gap-4">
+    {certs.map((cert) => (
+      <li>
+        <a
+          href={cert.credlyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex flex-col gap-1 border border-amber-light rounded-lg p-4 hover:border-amber-primary transition-colors group"
+        >
+          <span class="text-sm font-semibold text-site-heading group-hover:text-amber-primary transition-colors leading-snug">
+            {cert.name}
+          </span>
+          <span class="text-xs text-site-muted font-mono">{cert.issuer}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

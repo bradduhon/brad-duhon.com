@@ -1,0 +1,59 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+const skillGroups = [
+  {
+    label: 'AWS',
+    skills: ['IAM Identity Center', 'Organizations', 'KMS', 'CloudTrail', 'Config', 'Security Hub', 'GuardDuty', 'API Gateway', 'Lambda', 'DynamoDB', 'Cognito', 'S3', 'CloudFront', 'SCPs'],
+  },
+  {
+    label: 'Infrastructure as Code',
+    skills: ['Terraform', 'CloudFormation', 'SAM'],
+  },
+  {
+    label: 'Identity & PKI',
+    skills: ['Public Key Infrastructure', 'YubiHSM', 'OAuth', 'Cognito IdP', 'FIPS 140', 'Certificate Lifecycle Management'],
+  },
+  {
+    label: 'IoT & Embedded Security',
+    skills: ['Matter Compliance', 'DAC Certificate Vending', 'Device Attestation', 'Code Signing', 'BLE Security'],
+  },
+  {
+    label: 'Security Program',
+    skills: ['Threat Modeling (STRIDE)', 'Risk Register', 'Incident Response', 'Security Triage', 'Product Security Review', 'Supply Chain Risk'],
+  },
+  {
+    label: 'Compliance & Privacy',
+    skills: ['GDPR', 'EU RED', 'Cloud Security Policy Authorship'],
+  },
+  {
+    label: 'Tooling & Languages',
+    skills: ['Python', 'Boto3', 'AWS CLI', 'Lacework', 'Wiz', 'SumoLogic', 'PagerDuty', 'JavaScript', 'Git'],
+  },
+];
+---
+
+<section id="skills" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
+  <h2 class="text-2xl font-bold text-site-heading mb-8">
+    <span class="border-b-2 border-amber-primary pb-1">Skills & Tech</span>
+  </h2>
+
+  <div class="grid gap-6">
+    {skillGroups.map((group) => (
+      <div>
+        <p class="text-xs font-mono font-semibold text-amber-dark uppercase tracking-widest mb-3">
+          {group.label}
+        </p>
+        <ul class="flex flex-wrap gap-2">
+          {group.skills.map((skill) => (
+            <li class="text-sm bg-site-bg border border-amber-light text-site-text px-3 py-1 rounded hover:border-amber-primary transition-colors">
+              {skill}
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </div>
+</section>

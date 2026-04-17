@@ -1,0 +1,61 @@
+# Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+# Confidential and Proprietary.
+# Unauthorized copying of this file is strictly prohibited.
+
+name: Terraform — Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type 'apply' to confirm you have reviewed the plan"
+        required: true
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+jobs:
+  apply:
+    name: terraform apply
+    runs-on: ubuntu-latest
+    # Optional: add a GitHub Environment with required reviewers for an
+    # approval gate before apply runs. Configure at:
+    # Settings > Environments > terraform-apply > Required reviewers
+    # environment: terraform-apply
+
+    steps:
+      - name: Verify confirmation input
+        if: github.event.inputs.confirm != 'apply'
+        run: |
+          echo "Confirmation input was '${{ github.event.inputs.confirm }}', expected 'apply'. Aborting."
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TF_APPLY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform init
+        working-directory: infrastructure
+        run: terraform init -no-color
+
+      - name: Terraform validate
+        working-directory: infrastructure
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        working-directory: infrastructure
+        run: terraform plan -no-color -out=tfplan
+
+      - name: Terraform apply
+        working-directory: infrastructure
+        run: terraform apply -no-color -auto-approve tfplan

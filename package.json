@@ -1,0 +1,20 @@
+{
+  "_copyright": "Copyright (c) 2026 Brad Duhon. All Rights Reserved.",
+  "name": "brad-duhon-site",
+  "private": true,
+  "scripts": {
+    "dev:main": "pnpm --filter @brad-duhon/main dev",
+    "dev:lab": "pnpm --filter @brad-duhon/lab dev",
+    "build": "turbo build",
+    "build:main": "pnpm --filter @brad-duhon/main build",
+    "build:lab": "pnpm --filter @brad-duhon/lab build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sharp"]
+  }
+}

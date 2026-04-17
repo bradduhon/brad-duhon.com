@@ -1,0 +1,48 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+const projects = [
+  {
+    name: 'brad-duhon.com',
+    description: 'This site - a security-first personal portfolio and digital garden built on Astro, Tailwind, and AWS. Designed with least-privilege from the ground up: GitHub OIDC deploy role, CloudFront OAC, SSE-KMS, and a living D3-force knowledge graph for the lab.',
+    repo: 'https://github.com/bradduhon/brad-duhon.com',
+    tags: ['Astro', 'Terraform', 'AWS', 'CloudFront', 'GitHub Actions', 'OIDC'],
+  },
+];
+---
+
+<section id="projects" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
+  <h2 class="text-2xl font-bold text-site-heading mb-8">
+    <span class="border-b-2 border-amber-primary pb-1">Projects</span>
+  </h2>
+
+  <div class="grid gap-6">
+    {projects.map((project) => (
+      <article class="border border-amber-light rounded-lg p-6 hover:border-amber-primary transition-colors group">
+        <div class="flex items-start justify-between gap-4 mb-3">
+          <h3 class="text-lg font-semibold text-site-heading group-hover:text-amber-primary transition-colors">
+            {project.name}
+          </h3>
+          <a
+            href={project.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="shrink-0 text-xs font-mono text-amber-dark hover:text-amber-dark transition-colors"
+          >
+            GitHub ↗
+          </a>
+        </div>
+        <p class="text-site-text text-sm leading-relaxed mb-4">{project.description}</p>
+        <ul class="flex flex-wrap gap-2">
+          {project.tags.map((tag) => (
+            <li class="text-xs font-mono bg-amber-light text-amber-dark px-2 py-0.5 rounded">
+              {tag}
+            </li>
+          ))}
+        </ul>
+      </article>
+    ))}
+  </div>
+</section>

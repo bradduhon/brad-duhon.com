@@ -1,0 +1,29 @@
+# Terraform
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.backup
+**/.terraform.lock.hcl
+**/terraform.tfvars
+**/override.tf
+**/override.tf.json
+
+# Node
+node_modules/
+dist/
+.astro/
+
+# pnpm
+.pnpm-store/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Secrets — never commit these
+*.env
+.env.*
+!.env.example

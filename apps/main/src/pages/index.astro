@@ -1,0 +1,28 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+import BaseLayout from '@layouts/BaseLayout.astro';
+import Nav         from '@components/Nav.astro';
+import Hero        from '@components/Hero.astro';
+import Projects    from '@components/Projects.astro';
+import Skills      from '@components/Skills.astro';
+import Experience  from '@components/Experience.astro';
+// import Certs    from '@components/Certs.astro';
+// import FromTheLab from '@components/FromTheLab.astro';
+import Footer      from '@components/Footer.astro';
+---
+
+<BaseLayout>
+  <Nav />
+  <main>
+    <Hero />
+    <Projects />
+    <Skills />
+    <Experience />
+    {/* <Certs /> */}
+    {/* <FromTheLab /> */}
+  </main>
+  <Footer />
+</BaseLayout>

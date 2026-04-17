@@ -1,0 +1,61 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+---
+
+<footer class="border-t border-amber-light mt-8">
+  <div class="max-w-3xl mx-auto px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <p class="text-xs font-mono text-site-muted">
+      &copy; {new Date().getFullYear()} Brad Duhon
+    </p>
+    <ul class="flex items-center gap-6">
+      <!-- Email obfuscated - never hardcoded in HTML -->
+      <li>
+        <button
+          id="reveal-email"
+          class="text-sm text-site-muted hover:text-amber-primary transition-colors"
+          aria-label="Reveal email address"
+        >
+          Email
+        </button>
+      </li>
+      <li>
+        <a
+          href="https://github.com/bradduhon"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-site-muted hover:text-amber-primary transition-colors"
+        >
+          GitHub
+        </a>
+      </li>
+      <li>
+        <a
+          href="https://linkedin.com/in/brad-duhon-2463b017"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-site-muted hover:text-amber-primary transition-colors"
+        >
+          LinkedIn
+        </a>
+      </li>
+    </ul>
+  </div>
+</footer>
+
+<script>
+  // Email obfuscation - assembled client-side to prevent harvesting
+  const btn = document.getElementById('reveal-email');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const parts = ['brad', '.', 'duhon', '@', 'gmail', '.', 'com'];
+      const addr = parts.join('');
+      const link = document.createElement('a');
+      link.href = `mailto:${addr}`;
+      link.textContent = addr;
+      link.className = 'text-sm text-amber-primary hover:text-amber-dark transition-colors';
+      btn.replaceWith(link);
+    });
+  }
+</script>

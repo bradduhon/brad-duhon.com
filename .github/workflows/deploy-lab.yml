@@ -1,0 +1,66 @@
+name: Deploy — lab.brad-duhon.com
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/lab/**"
+      - "packages/shared-ui/**"
+      - ".github/workflows/deploy-lab.yml"
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy lab site
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build lab site
+        run: pnpm --filter @brad-duhon/lab build
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync apps/lab/dist s3://${{ secrets.LAB_SITE_BUCKET }} \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --exclude "*.html" \
+            --exclude "*.xml" \
+            --exclude "*.txt" \
+            --exclude "pagefind/**"
+          aws s3 sync apps/lab/dist s3://${{ secrets.LAB_SITE_BUCKET }} \
+            --delete \
+            --cache-control "public, max-age=0, must-revalidate" \
+            --exclude "*" \
+            --include "*.html" \
+            --include "*.xml" \
+            --include "*.txt" \
+            --include "pagefind/**"
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.LAB_CLOUDFRONT_ID }} \
+            --paths "/*"

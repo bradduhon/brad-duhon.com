@@ -1,0 +1,83 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+const roles = [
+  {
+    company: 'iRobot',
+    title: 'Principal Cloud Security Engineer',
+    dates: 'Jan 2025 – Present',
+    bullets: [
+      'Architected iRobot\'s PKI from the ground up - custom FIPS 140-compliant microservice integrated with AWS KMS to automate issuance and lifecycle management of intermediate certificates, eliminating manual certificate handling.',
+      'Redesigned the manufacturing partner security framework, rewriting contractual security expectations to reduce third-party supply chain risk across all production partners.',
+      'Leading active research into TLS-equivalent encrypted communication over legacy BLE open broadcast channels for constrained IoT devices where standard OOB Bluetooth encryption models are unavailable.',
+    ],
+  },
+  {
+    company: 'iRobot',
+    title: 'Senior Cloud Security Engineer',
+    dates: 'Sep 2022 – Jan 2025',
+    bullets: [
+      'Authored iRobot\'s foundational Cloud Security Requirements Document, establishing contractual security obligations and onboarding dozens of engineering teams to consistent secure-by-default practices.',
+      'Designed and built an IoT device certificate vending service for the Matter smart home specification using Python and AWS serverless infrastructure - a first-of-kind capability delivering DACs to products post-manufacturing.',
+      'Pioneered AWS front-end authentication hardening, transitioning internal sites from SSO role-based access to scoped Cognito IdP to reduce blast radius from credential compromise.',
+      'Evolved and maintained the organization\'s Risk Register program, building relational links across weaknesses to give leadership a systemic view of risk rather than siloed findings.',
+    ],
+  },
+  {
+    company: 'iRobot',
+    title: 'Cloud Security Engineer',
+    dates: 'Mar 2020 – Sep 2022',
+    bullets: [
+      'Engineered a GDPR Right to Erasure orchestrator processing hundreds of daily deletion requests at 100% compliance with the 30-day mandate - running under $25/month via serverless architecture.',
+      'Reduced cloud log search time by over 95% and materially lowered storage costs by migrating log aggregation to Parquet format.',
+      'Conducted threat modeling using STRIDE across infrastructure designs, producing prioritized remediation plans ahead of production deployment.',
+      'Configured AWS SCPs and Organizational Unit structure across the account fleet, establishing baseline security guardrails enforced at the organization level.',
+    ],
+  },
+  {
+    company: 'iRobot',
+    title: 'Associate Cloud Security Engineer',
+    dates: 'Jul 2018 – Mar 2020',
+    bullets: [
+      'Established iRobot\'s foundational cloud security standards, onboarding hundreds of developers to consistent security baselines.',
+      'Built centralized CloudTrail log aggregation infrastructure across all AWS accounts, including a Python-based query interface for repeatable log analysis.',
+    ],
+  },
+  {
+    company: 'Redline Trading Solutions',
+    title: 'IT Engineer',
+    dates: 'Mar 2015 – Jun 2018',
+    bullets: [
+      'Developed a Python-based EC2 spot instance bidding system that reduced compute costs and improved bid success rate.',
+      'Configured server hardware and BIOS for ultra-low-latency stock market trading execution, directly supporting customer SLA requirements.',
+    ],
+  },
+];
+---
+
+<section id="experience" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
+  <h2 class="text-2xl font-bold text-site-heading mb-8">
+    <span class="border-b-2 border-amber-primary pb-1">Experience</span>
+  </h2>
+
+  <div class="grid gap-8">
+    {roles.map((role) => (
+      <article>
+        <div class="flex items-baseline justify-between gap-4 mb-1">
+          <h3 class="font-semibold text-site-heading">{role.title}</h3>
+          <span class="shrink-0 text-xs font-mono text-site-muted">{role.dates}</span>
+        </div>
+        <p class="text-sm text-amber-dark font-medium mb-3">{role.company}</p>
+        <ul class="space-y-1.5">
+          {role.bullets.map((bullet) => (
+            <li class="text-sm text-site-text leading-relaxed pl-4 relative before:content-['–'] before:absolute before:left-0 before:text-amber-dark">
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      </article>
+    ))}
+  </div>
+</section>

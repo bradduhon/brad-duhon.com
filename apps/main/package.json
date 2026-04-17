@@ -1,0 +1,22 @@
+{
+  "_copyright": "Copyright (c) 2026 Brad Duhon. All Rights Reserved.",
+  "name": "@brad-duhon/main",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host",
+    "build": "astro build",
+    "preview": "astro preview",
+    "typecheck": "astro check"
+  },
+  "dependencies": {
+    "astro": "^5.0.0",
+    "@astrojs/tailwind": "^5.0.0",
+    "@astrojs/sitemap": "^3.0.0"
+  },
+  "devDependencies": {
+    "@brad-duhon/shared-ui": "workspace:*",
+    "tailwindcss": "^3.4.0"
+  }
+}

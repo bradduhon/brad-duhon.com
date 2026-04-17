@@ -1,0 +1,68 @@
+---
+// Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+// Confidential and Proprietary.
+// Unauthorized copying of this file is strictly prohibited.
+
+// Placeholder entries - replaced with dynamic fetch from lab site in Phase 3.
+const entries = [
+  {
+    title: 'IAM PassRole privilege escalation - a practical walkthrough',
+    date: '2026-04-17',
+    description: 'How PassRole can be chained with other permissions to escalate privileges, and how to prevent it.',
+    tags: ['aws', 'iam', 'security'],
+    slug: 'iam-passrole-escalation',
+  },
+  {
+    title: 'CloudTrail gaps: what it misses and how to compensate',
+    date: '2026-04-10',
+    description: 'CloudTrail is not a complete audit log. A rundown of the gaps and detective controls that fill them.',
+    tags: ['aws', 'cloudtrail', 'til'],
+    slug: 'cloudtrail-gaps',
+  },
+  {
+    title: 'Terraform state: why encryption alone is not enough',
+    date: '2026-04-03',
+    description: 'State files contain resolved secrets. Encryption is table stakes - here is what else matters.',
+    tags: ['terraform', 'security'],
+    slug: 'terraform-state-security',
+  },
+];
+---
+
+<section id="lab" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
+  <div class="flex items-baseline justify-between mb-8">
+    <h2 class="text-2xl font-bold text-site-heading">
+      <span class="border-b-2 border-amber-primary pb-1">From the Lab</span>
+    </h2>
+    <a
+      href="https://lab.brad-duhon.com"
+      class="text-sm text-amber-primary hover:text-amber-dark transition-colors font-medium"
+    >
+      All entries ↗
+    </a>
+  </div>
+
+  <ul class="grid gap-4">
+    {entries.map((entry) => (
+      <li>
+        <a
+          href={`https://lab.brad-duhon.com/${entry.slug}`}
+          class="flex flex-col gap-2 border-l-2 border-amber-light hover:border-amber-primary transition-colors pl-4 py-1 group"
+        >
+          <span class="text-sm font-semibold text-site-heading group-hover:text-amber-primary transition-colors leading-snug">
+            {entry.title}
+          </span>
+          <span class="text-xs text-site-muted">{entry.date}</span>
+          <p class="text-sm text-site-muted leading-relaxed">{entry.description}</p>
+          <ul class="flex flex-wrap gap-1.5">
+            {entry.tags.map((tag) => (
+              <li class="text-xs font-mono bg-amber-light text-amber-dark px-2 py-0.5 rounded">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </a>
+      </li>
+    ))}
+  </ul>
+</section>

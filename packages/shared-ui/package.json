@@ -1,0 +1,13 @@
+{
+  "_copyright": "Copyright (c) 2026 Brad Duhon. All Rights Reserved.",
+  "name": "@brad-duhon/shared-ui",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tailwind": "./tailwind.config.js"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0"
+  }
+}

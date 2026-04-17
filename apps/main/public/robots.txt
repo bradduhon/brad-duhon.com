@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://brad-duhon.com/sitemap-index.xml

@@ -1,0 +1,85 @@
+# Copyright (c) 2026 Brad Duhon. All Rights Reserved.
+# Confidential and Proprietary.
+# Unauthorized copying of this file is strictly prohibited.
+
+name: Terraform — Plan
+
+on:
+  pull_request:
+    paths:
+      - "infrastructure/**"
+      - "!infrastructure/bootstrap/**"
+      - ".github/workflows/terraform-plan.yml"
+
+permissions:
+  id-token: write   # Required for OIDC
+  contents: read
+  pull-requests: write  # Required to post plan output as PR comment
+
+jobs:
+  plan:
+    name: terraform plan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.9"
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.TF_PLAN_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform init
+        id: init
+        working-directory: infrastructure
+        run: terraform init -no-color
+
+      - name: Terraform validate
+        id: validate
+        working-directory: infrastructure
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        id: plan
+        working-directory: infrastructure
+        run: terraform plan -no-color -out=tfplan 2>&1 | tee plan.txt
+        continue-on-error: true  # Post comment even if plan fails
+
+      - name: Post plan to PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('infrastructure/plan.txt', 'utf8');
+            const maxLen = 65000;
+            const truncated = plan.length > maxLen
+              ? plan.substring(0, maxLen) + '\n\n...[truncated]'
+              : plan;
+
+            const body = [
+              '## Terraform Plan',
+              '',
+              '```',
+              truncated,
+              '```',
+              '',
+              `**Validate:** \`${{ steps.validate.outcome }}\``,
+              `**Plan:** \`${{ steps.plan.outcome }}\``,
+            ].join('\n');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body,
+            });
+
+      - name: Fail if plan failed
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
