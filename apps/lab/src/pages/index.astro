@@ -6,20 +6,20 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '@layouts/BaseLayout.astro';
 import EntryCard from '@components/ListView/EntryCard.astro';
+import KnowledgeGraph from '@components/KnowledgeGraph/index.tsx';
 
 const allEntries = await getCollection('entries', ({ data }) => !data.draft);
 const entries = allEntries.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-
 const allTags = [...new Set(entries.flatMap((e) => e.data.tags))].sort();
-
 const activeTag = Astro.url.searchParams.get('tag') ?? '';
+const initialCenter = `article-${entries[0]?.slug ?? ''}`;
 ---
 
 <BaseLayout>
-  <div class="max-w-3xl mx-auto px-6 py-12">
 
-    <!-- Header -->
-    <div class="flex items-baseline justify-between mb-2">
+  <!-- Header — constrained column -->
+  <div class="max-w-3xl mx-auto px-6 pt-10 pb-6">
+    <div class="flex items-start justify-between">
       <div>
         <a href="https://brad-duhon.com" class="text-xs font-mono text-site-muted hover:text-amber-dark transition-colors">
           brad-duhon.com ↗
@@ -28,19 +28,47 @@ const activeTag = Astro.url.searchParams.get('tag') ?? '';
           <span class="border-b-2 border-amber-primary pb-1">Lab</span>
         </h1>
       </div>
-      <a href="/rss.xml" class="text-xs font-mono text-site-muted hover:text-amber-dark transition-colors">
-        RSS
-      </a>
+      <div class="flex items-center gap-3 mt-1">
+        <div class="flex items-center border border-amber-light rounded overflow-hidden text-xs font-mono">
+          <button id="btn-graph" class="px-3 py-1.5 bg-amber-primary text-white transition-colors">
+            Graph
+          </button>
+          <button id="btn-list" class="px-3 py-1.5 text-site-muted hover:text-amber-dark transition-colors">
+            List
+          </button>
+        </div>
+        <a href="/rss.xml" class="text-xs font-mono text-site-muted hover:text-amber-dark transition-colors">RSS</a>
+      </div>
     </div>
-    <p class="text-sm text-site-muted mb-10">
+    <p class="text-sm text-site-muted mt-3">
       Security research, cloud experiments, homelab notes, and TILs.
       No rigid categories - tags do the sorting.
     </p>
+  </div>
 
-    <!-- Pagefind search -->
-    <div id="search" class="mb-8"></div>
+  <!-- Graph view — full viewport width, breaks out of column -->
+  <div
+    id="view-graph"
+    class="w-full border-t border-b border-amber-light bg-site-bg"
+    style="height: clamp(520px, 74vh, 960px); position: relative;"
+  >
+    <KnowledgeGraph initialCenterId={initialCenter} client:load />
+  </div>
 
-    <!-- Tag filter pills -->
+  <style>
+    /* Ensure astro-island wrapper fills the graph container so height: 100%
+       resolves correctly through the full element chain. */
+    #view-graph > astro-island {
+      display: block;
+      position: absolute;
+      inset: 0;
+    }
+  </style>
+
+  <!-- List view — constrained column, hidden by default -->
+  <div id="view-list" class="hidden max-w-3xl mx-auto px-6 py-8">
+    <div id="search" class="mb-6"></div>
+
     <div class="flex flex-wrap gap-2 mb-8" id="tag-filters">
       <button
         data-tag=""
@@ -58,7 +86,6 @@ const activeTag = Astro.url.searchParams.get('tag') ?? '';
       ))}
     </div>
 
-    <!-- Entry list -->
     <div class="grid gap-8" id="entry-list">
       {entries.map((entry, i) => (
         <EntryCard
@@ -71,56 +98,65 @@ const activeTag = Astro.url.searchParams.get('tag') ?? '';
         />
       ))}
     </div>
-
   </div>
+
 </BaseLayout>
 
-<!-- Pagefind UI -->
 <link rel="stylesheet" href="/pagefind/pagefind-ui.css" />
 <script src="/pagefind/pagefind-ui.js" is:inline></script>
-<script is:inline>
-  window.addEventListener('DOMContentLoaded', () => {
-    if (window.PagefindUI) {
-      new PagefindUI({
-        element: '#search',
-        showSubResults: false,
-        resetStyles: false,
-      });
-    }
-  });
-</script>
 
-<!-- Tag filter logic -->
 <script define:vars={{ activeTag }}>
+  const btnGraph  = document.getElementById('btn-graph');
+  const btnList   = document.getElementById('btn-list');
+  const viewGraph = document.getElementById('view-graph');
+  const viewList  = document.getElementById('view-list');
+
+  function showGraph() {
+    viewGraph.classList.remove('hidden');
+    viewList.classList.add('hidden');
+    btnGraph.classList.add('bg-amber-primary', 'text-white');
+    btnGraph.classList.remove('text-site-muted');
+    btnList.classList.remove('bg-amber-primary', 'text-white');
+    btnList.classList.add('text-site-muted');
+  }
+
+  function showList() {
+    viewList.classList.remove('hidden');
+    viewGraph.classList.add('hidden');
+    btnList.classList.add('bg-amber-primary', 'text-white');
+    btnList.classList.remove('text-site-muted');
+    btnGraph.classList.remove('bg-amber-primary', 'text-white');
+    btnGraph.classList.add('text-site-muted');
+    if (window.PagefindUI && !document.querySelector('#search .pagefind-ui')) {
+      new PagefindUI({ element: '#search', showSubResults: false, resetStyles: false });
+    }
+  }
+
+  btnGraph.addEventListener('click', showGraph);
+  btnList.addEventListener('click', showList);
+
   const pills = document.querySelectorAll('.tag-pill');
   const cards = document.querySelectorAll('.entry-card');
-  let current = activeTag;
 
   function applyFilter(tag) {
-    current = tag;
-
-    pills.forEach((pill) => {
-      const isActive = pill.dataset.tag === tag;
-      pill.classList.toggle('border-amber-primary', isActive);
-      pill.classList.toggle('bg-amber-primary', isActive);
-      pill.classList.toggle('text-white', isActive);
-      pill.classList.toggle('border-amber-light', !isActive);
-      pill.classList.toggle('text-site-muted', !isActive);
+    pills.forEach((p) => {
+      const active = p.dataset.tag === tag;
+      p.classList.toggle('border-amber-primary', active);
+      p.classList.toggle('bg-amber-primary', active);
+      p.classList.toggle('text-white', active);
+      p.classList.toggle('border-amber-light', !active);
+      p.classList.toggle('text-site-muted', !active);
     });
-
-    cards.forEach((card) => {
-      const tags = card.dataset.tags ? card.dataset.tags.split(',') : [];
-      card.style.display = !tag || tags.includes(tag) ? '' : 'none';
+    cards.forEach((c) => {
+      const tags = c.dataset.tags ? c.dataset.tags.split(',') : [];
+      c.style.display = !tag || tags.includes(tag) ? '' : 'none';
     });
-
     const url = new URL(window.location);
     tag ? url.searchParams.set('tag', tag) : url.searchParams.delete('tag');
     window.history.replaceState({}, '', url);
   }
 
-  pills.forEach((pill) => {
-    pill.addEventListener('click', () => applyFilter(pill.dataset.tag ?? ''));
-  });
+  pills.forEach((p) => p.addEventListener('click', () => applyFilter(p.dataset.tag ?? '')));
 
-  if (current) applyFilter(current);
+  if (activeTag) { showList(); applyFilter(activeTag); }
 </script>

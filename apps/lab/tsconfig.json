@@ -3,6 +3,8 @@
   "compilerOptions": {
     "ignoreDeprecations": "5.0",
     "baseUrl": ".",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
     "paths": {
       "@components/*": ["src/components/*"],
       "@layouts/*":    ["src/layouts/*"]
