@@ -51,3 +51,19 @@ const formatted = date.toLocaleDateString('en-US', {
     </article>
   </div>
 </BaseLayout>
+
+<script>
+  const blocks = document.querySelectorAll('pre[data-language="mermaid"] > code');
+  if (blocks.length > 0) {
+    const { default: mermaid } = await import('mermaid');
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+    blocks.forEach((code) => {
+      const pre = code.parentElement as HTMLElement;
+      const div = document.createElement('div');
+      div.className = 'mermaid not-prose my-8 flex justify-center';
+      div.textContent = code.textContent ?? '';
+      pre.replaceWith(div);
+    });
+    await mermaid.run({ querySelector: '.mermaid' });
+  }
+</script>
