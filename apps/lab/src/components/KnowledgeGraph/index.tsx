@@ -197,6 +197,16 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
     fetch('/graph.json').then((r) => r.json()).then(setGraphData).catch(console.error);
   }, []);
 
+  // If the baked-in initialCenterId (from index.html build time) doesn't exist
+  // in the fetched graph data, fall back to the graph's own initialCenter.
+  // This happens when graph.json was browser-cached from a previous build.
+  useEffect(() => {
+    if (!graphData) return;
+    if (!graphData.nodes.some((n) => n.id === centerId) && graphData.initialCenter) {
+      setCenterId(graphData.initialCenter);
+    }
+  }, [graphData]);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const ro = new ResizeObserver(([entry]) => {

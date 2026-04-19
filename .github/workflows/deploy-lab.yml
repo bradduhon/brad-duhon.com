@@ -52,6 +52,7 @@ jobs:
             --exclude "*.html" \
             --exclude "*.xml" \
             --exclude "*.txt" \
+            --exclude "*.json" \
             --exclude "pagefind/**"
           aws s3 sync apps/lab/dist s3://${{ secrets.LAB_SITE_BUCKET }} \
             --delete \
@@ -60,6 +61,7 @@ jobs:
             --include "*.html" \
             --include "*.xml" \
             --include "*.txt" \
+            --include "*.json" \
             --include "pagefind/**"
 
       - name: Invalidate CloudFront cache
