@@ -3,7 +3,7 @@ title: "Cross-account API Gateway access via PrivateLink and SigV4"
 date: 2026-04-22
 tags: [aws, security, api-gateway, vpc, privatelink, iam, sigv4, terraform, architecture]
 description: "A four-layer defense-in-depth pattern for Lambda-to-API Gateway calls across AWS accounts - zero public internet exposure using Interface VPC Endpoints, Security Group peering, endpoint policies, and SigV4 authentication."
-draft: False
+draft: false
 ---
 
 To ensure traffic between a Lambda in **Account A** and a private API Gateway in **Account B** never touches the public internet, this pattern combines Interface VPC Endpoints (AWS PrivateLink) with SigV4 authentication (AWS IAM) across four independent security layers. Every layer must pass independently - no single control is load-bearing on its own.
