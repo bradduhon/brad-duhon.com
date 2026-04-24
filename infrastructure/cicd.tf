@@ -207,6 +207,7 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
+      "dynamodb:DescribeTable", # required to refresh data.aws_dynamodb_table
     ]
     resources = [data.aws_dynamodb_table.terraform_locks.arn]
   }
@@ -236,7 +237,8 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "s3:GetLifecycleConfiguration",
       "s3:GetBucketTagging",
       "s3:GetBucketLocation",
-      "s3:GetBucketAcl",
+      "s3:GetBucketAcl",              # provider reads ACL on every bucket refresh
+      "s3:GetBucketOwnershipControls", # provider v5+ reads this on every bucket refresh
       "s3:ListBucket",
     ]
     resources = [
@@ -256,6 +258,7 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "cloudfront:GetOriginAccessControl",
       "cloudfront:ListOriginAccessControls",
       "cloudfront:GetFunction",
+      "cloudfront:DescribeFunction", # provider uses DescribeFunction (not GetFunction) on refresh
       "cloudfront:ListFunctions",
       "cloudfront:GetResponseHeadersPolicy",
       "cloudfront:ListResponseHeadersPolicies",
@@ -293,7 +296,7 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
     resources = ["*"] # Route53 read APIs require * for GetChange (change IDs are dynamic)
   }
 
-  # KMS — read site key metadata
+  # KMS — read site key metadata (scoped to known key ARN)
   statement {
     sid    = "KMSRead"
     effect = "Allow"
@@ -301,10 +304,18 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "kms:DescribeKey",
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
-      "kms:ListAliases",
       "kms:ListResourceTags",
     ]
     resources = [aws_kms_key.site.arn]
+  }
+
+  # kms:ListAliases is an account-level list operation — IAM does not support
+  # resource-level restrictions on it; resource must be *.
+  statement {
+    sid       = "KMSListAliases"
+    effect    = "Allow"
+    actions   = ["kms:ListAliases"]
+    resources = ["*"]
   }
 
   # IAM — read roles and OIDC provider
@@ -406,6 +417,7 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
+      "dynamodb:DescribeTable", # required to refresh data.aws_dynamodb_table
     ]
     resources = [data.aws_dynamodb_table.terraform_locks.arn]
   }
@@ -445,7 +457,8 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "s3:GetBucketTagging",
       "s3:PutBucketTagging",
       "s3:GetBucketLocation",
-      "s3:GetBucketAcl",
+      "s3:GetBucketAcl",               # provider reads ACL on every bucket refresh
+      "s3:GetBucketOwnershipControls",  # provider v5+ reads this on every bucket refresh
       "s3:ListBucket",
     ]
     resources = ["arn:${data.aws_partition.current.partition}:s3:::${local.project}-*"]
@@ -472,6 +485,7 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "cloudfront:UpdateFunction",
       "cloudfront:DeleteFunction",
       "cloudfront:GetFunction",
+      "cloudfront:DescribeFunction", # provider uses DescribeFunction (not GetFunction) on refresh
       "cloudfront:PublishFunction",
       "cloudfront:ListFunctions",
       "cloudfront:CreateResponseHeadersPolicy",
@@ -525,12 +539,14 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
     resources = ["*"] # Route53 GetChange requires *; ChangeResourceRecordSets scoped at zone level
   }
 
-  # KMS — manage site encryption key (scoped to project alias prefix)
+  # KMS — manage site encryption key (scoped directly to known key ARN).
+  # kms:RequestAlias condition removed: the condition is absent when Terraform
+  # calls DescribeKey/GetKeyPolicy with a key ID (not an alias), which causes
+  # StringLike to evaluate false and deny the action.
   statement {
     sid    = "KMSSiteKeyManagement"
     effect = "Allow"
     actions = [
-      "kms:CreateKey",
       "kms:ScheduleKeyDeletion",
       "kms:CancelKeyDeletion",
       "kms:DescribeKey",
@@ -542,12 +558,15 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "kms:ListResourceTags",
       "kms:ReplicateKey",
     ]
-    resources = ["arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
-    condition {
-      test     = "StringLike"
-      variable = "kms:RequestAlias"
-      values   = ["alias/${local.project}-*"]
-    }
+    resources = [aws_kms_key.site.arn]
+  }
+
+  # kms:CreateKey cannot be scoped to a specific key ARN (key does not exist yet)
+  statement {
+    sid       = "KMSCreateKey"
+    effect    = "Allow"
+    actions   = ["kms:CreateKey"]
+    resources = ["*"]
   }
 
   statement {
@@ -557,12 +576,20 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "kms:CreateAlias",
       "kms:DeleteAlias",
       "kms:UpdateAlias",
-      "kms:ListAliases",
     ]
     resources = [
       "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${local.project}-*",
       "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*",
     ]
+  }
+
+  # kms:ListAliases is an account-level list operation — IAM does not support
+  # resource-level restrictions on it; resource must be *.
+  statement {
+    sid       = "KMSListAliases"
+    effect    = "Allow"
+    actions   = ["kms:ListAliases"]
+    resources = ["*"]
   }
 
   # IAM — manage project roles and OIDC provider only (scoped by name prefix)
