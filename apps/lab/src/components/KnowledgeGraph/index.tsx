@@ -190,7 +190,10 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
   const [positions, setPositions] = useState<Record<string, NodePosition>>({});
   const [previewNode, setPreviewNode] = useState<GraphNode | null>(null);
   const [previewPos, setPreviewPos]   = useState<NodePosition>({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ w: 800, h: 520 });
+  const [dimensions, setDimensions] = useState(() => ({
+    w: typeof window !== 'undefined' ? window.innerWidth : 800,
+    h: 520,
+  }));
 
   const containerRef = useRef<HTMLDivElement>(null);
   const simulationRef = useRef<Simulation<GraphNode, GraphEdge> | null>(null);
@@ -316,10 +319,17 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
   const handleNodeClick = useCallback((node: GraphNode, e: Event) => {
     e.stopPropagation();
     clearHoverTimer();
+    // Touch-primary devices have no hover, so tap on a non-center node re-centers it.
+    // Pointer devices keep the preview-card behavior.
+    if (window.matchMedia('(hover: none)').matches && node.id !== centerId) {
+      setCenterId(node.id);
+      setPreviewNode(null);
+      return;
+    }
     const pos = positions[node.id];
     if (pos) setPreviewPos(pos);
     setPreviewNode((prev) => (prev?.id === node.id ? null : node));
-  }, [clearHoverTimer, positions]);
+  }, [centerId, clearHoverTimer, positions]);
 
   // TAG RESTORE: uncomment getTagRelevance for tag node sizing
   // const getTagRelevance = useCallback((tagNodeId: string): number => {

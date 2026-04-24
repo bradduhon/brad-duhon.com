@@ -20,10 +20,12 @@ interface Props {
 }
 
 function cardStyle(nodeX: number, nodeY: number, canvasW: number, canvasH: number, estHeight: number) {
-  // Flip left if card would overflow the right edge
-  const left = nodeX + GAP + CARD_W > canvasW
-    ? nodeX - CARD_W - GAP
-    : nodeX + GAP;
+  // Shrink card on narrow viewports so it always fits within the canvas.
+  const cardW = Math.min(CARD_W, canvasW - 2 * GAP);
+
+  // Flip left if card would overflow the right edge, then clamp to canvas bounds.
+  const rawLeft = nodeX + GAP + cardW > canvasW ? nodeX - cardW - GAP : nodeX + GAP;
+  const left = Math.max(GAP, Math.min(rawLeft, canvasW - cardW - GAP));
 
   // Clamp vertically so card stays within canvas
   const top = Math.max(GAP, Math.min(nodeY - estHeight / 2, canvasH - estHeight - GAP));
@@ -32,7 +34,7 @@ function cardStyle(nodeX: number, nodeY: number, canvasW: number, canvasH: numbe
     position: 'absolute' as const,
     top: `${top}px`,
     left: `${left}px`,
-    width: `${CARD_W}px`,
+    width: `${cardW}px`,
     background: '#FAFAF9',
     border: '1.5px solid #D97706',
     borderRadius: '8px',
