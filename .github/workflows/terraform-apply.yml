@@ -10,10 +10,6 @@ on:
       confirm:
         description: "Type 'apply' to confirm you have reviewed the plan"
         required: true
-      skip_refresh:
-        description: "Skip resource refresh — use only when applying IAM self-updates (bootstrap deadlock)"
-        type: boolean
-        default: false
 
 permissions:
   id-token: write  # Required for OIDC
@@ -58,12 +54,8 @@ jobs:
 
       - name: Terraform plan
         working-directory: infrastructure
-        run: |
-          REFRESH_FLAG=${{ github.event.inputs.skip_refresh == 'true' && '"-refresh=false"' || '""' }}
-          terraform plan -no-color $REFRESH_FLAG -out=tfplan
+        run: terraform plan -no-color -out=tfplan
 
       - name: Terraform apply
         working-directory: infrastructure
-        run: |
-          REFRESH_FLAG=${{ github.event.inputs.skip_refresh == 'true' && '"-refresh=false"' || '""' }}
-          terraform apply -no-color $REFRESH_FLAG -auto-approve tfplan
+        run: terraform apply -no-color -auto-approve tfplan
