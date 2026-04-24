@@ -366,16 +366,21 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
           const [x1, y1] = getEdgeEndpoint(tp, sp, sNode, sid === centerId);
           const [x2, y2] = getEdgeEndpoint(sp, tp, tNode, tid === centerId);
 
-          // Weight range: 1 (single rank-2 match) to 14 (all 3 top tags match).
-          // Map to stroke-width 0.8-3.5px so stronger correlations visually pop.
-          const strokeWidth = Math.min(0.8 + (edge.weight ?? 1) * 0.22, 3.5);
+          // t: normalized relationship strength 0-1 (weight range 1-14)
+          // Three channels encode strength: thickness, opacity, dash density.
+          // Weak = thin + faint + sparse dashes; strong = thick + solid + dense dashes.
+          const t = Math.min((edge.weight ?? 1) / 14, 1);
+          const strokeWidth  = 1 + t * 3;                       // 1px to 4px
+          const opacity      = 0.25 + t * 0.55;                 // 0.25 to 0.80
+          const dashGap      = Math.round(12 - t * 10);         // 12 (sparse) to 2 (dense)
           return (
             <line
               key={`e-${i}`}
               x1={x1} y1={y1} x2={x2} y2={y2}
               stroke="#D97706"
               stroke-width={strokeWidth}
-              opacity={0.3 + Math.min((edge.weight ?? 1) / 14, 1) * 0.45}
+              stroke-dasharray={`5 ${dashGap}`}
+              opacity={opacity}
             />
           );
         })}
