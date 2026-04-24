@@ -371,30 +371,49 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
 
           // sqrt(weight / max) spreads low values apart so weak/medium/strong are visually distinct.
           const t = Math.sqrt((edge.weight ?? 1) / maxVisibleWeight);
-          const strokeWidth = 0.6 + t * 4.4;    // 0.6px to 5px
-          const opacity     = 0.15 + t * 0.75;  // 0.15 to 0.90
+          const strokeWidth = 0.6 + t * 4.4;          // 0.6px to 5px
+          const baseOpacity = 0.04 + t * 0.55;        // 0.04 (barely visible) to 0.59
+          const pulseOpacity = 0.15 + t * 0.65;       // 0.15 to 0.80
 
-          // Quadratic bezier: control point is offset perpendicular to the midpoint.
-          // Curvature scales with edge length so short edges stay subtle.
-          const mx  = (x1 + x2) / 2;
-          const my  = (y1 + y2) / 2;
           const dx  = x2 - x1;
           const dy  = y2 - y1;
           const len = Math.sqrt(dx * dx + dy * dy);
           if (len === 0) return null;
-          const curve   = len * 0.12;
-          const cpx = mx - (dy / len) * curve;
-          const cpy = my + (dx / len) * curve;
+
+          // Pulse: short bright dash that travels back and forth along the edge.
+          // Duration varies per edge via stable hash so pulses don't all sync.
+          const pulseLen = Math.max(len * 0.18, 10);
+          const duration = 2.8 + (stableHash(sid + tid) % 25) / 10; // 2.8s – 5.3s
 
           return (
-            <path
-              key={`e-${i}`}
-              d={`M ${x1} ${y1} Q ${cpx} ${cpy} ${x2} ${y2}`}
-              fill="none"
-              stroke="#D97706"
-              stroke-width={strokeWidth}
-              opacity={opacity}
-            />
+            <>
+              {/* Static base wire */}
+              <line
+                key={`e-base-${i}`}
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke="#D97706"
+                stroke-width={strokeWidth}
+                opacity={baseOpacity}
+              />
+              {/* Traveling pulse overlay */}
+              <line
+                key={`e-pulse-${i}`}
+                x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke="#FCD34D"
+                stroke-width={strokeWidth * 0.75}
+                stroke-linecap="round"
+                stroke-dasharray={`${pulseLen} ${len + pulseLen}`}
+                opacity={pulseOpacity}
+              >
+                <animate
+                  attributeName="stroke-dashoffset"
+                  values={`0;${-len};0`}
+                  dur={`${duration}s`}
+                  repeatCount="indefinite"
+                  calcMode="ease-in-out"
+                />
+              </line>
+            </>
           );
         })}
 
