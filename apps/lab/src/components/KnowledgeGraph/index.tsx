@@ -279,10 +279,19 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
       .alphaDecay(0.016);
 
     sim.on('tick', () => {
+      // Clamp nodes to canvas bounds so boxes don't drift outside the viewport.
+      // Padding accounts for half the node footprint on each side.
+      visibleNodes.forEach((n) => {
+        const isC = n.id === centerId;
+        const px = isC ? ARTICLE_CENTER_W / 2 + 8 : ARTICLE_NEIGHBOR_W / 2 + 8;
+        const py = isC ? ARTICLE_CENTER_H / 2 + 8 : ARTICLE_NEIGHBOR_H / 2 + 8;
+        n.x = Math.max(px, Math.min(w - px, n.x ?? w / 2));
+        n.y = Math.max(py, Math.min(h - py, n.y ?? h / 2));
+      });
       cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => {
         const next: Record<string, NodePosition> = {};
-        visibleNodes.forEach((n) => { next[n.id] = { x: n.x ?? w / 2, y: n.y ?? h / 2 }; });
+        visibleNodes.forEach((n) => { next[n.id] = { x: n.x!, y: n.y! }; });
         setPositions(next);
       });
     });
