@@ -396,25 +396,42 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
           if (len === 0) return null;
 
           const pathFwd = `M ${x1} ${y1} L ${x2} ${y2}`;
-          const pathRev = `M ${x2} ${y2} L ${x1} ${y1}`;
+
+          // Comet tail: three trail orbs behind the lead, each progressively
+          // smaller and more transparent. begin="-(dur - delay)s" places each
+          // trail exactly `delay` seconds behind the lead in its animation cycle.
+          const trails = [
+            { delayS: 0.7, rScale: 0.25, opScale: 0.07 }, // furthest, faintest
+            { delayS: 0.4, rScale: 0.45, opScale: 0.20 }, // mid trail
+            { delayS: 0.2, rScale: 0.65, opScale: 0.40 }, // closest to lead
+          ];
 
           return (
             <g key={`e-${i}`}>
-              {/* Orb A: travels source → target → source */}
+              {/* Trail orbs — rendered back-to-front so lead sits on top */}
+              {trails.map(({ delayS, rScale, opScale }, ti) => (
+                <circle
+                  key={`trail-${ti}`}
+                  r={orbR * rScale}
+                  fill="#FCD34D"
+                  filter="url(#orb-glow)"
+                  opacity={orbOpacity * opScale}
+                >
+                  <animateMotion
+                    path={pathFwd}
+                    dur={`${duration}s`}
+                    begin={`${-(duration - delayS)}s`}
+                    repeatCount="indefinite"
+                    keyPoints="0;1;0"
+                    keyTimes="0;0.5;1"
+                    calcMode="linear"
+                  />
+                </circle>
+              ))}
+              {/* Lead orb */}
               <circle r={orbR} fill="#FCD34D" filter="url(#orb-glow)" opacity={orbOpacity}>
                 <animateMotion
                   path={pathFwd}
-                  dur={`${duration}s`}
-                  repeatCount="indefinite"
-                  keyPoints="0;1;0"
-                  keyTimes="0;0.5;1"
-                  calcMode="linear"
-                />
-              </circle>
-              {/* Orb B: counter-direction, slightly smaller and softer */}
-              <circle r={orbR * 0.65} fill="#FEF3C7" filter="url(#orb-glow)" opacity={orbOpacity * 0.65}>
-                <animateMotion
-                  path={pathRev}
                   dur={`${duration}s`}
                   repeatCount="indefinite"
                   keyPoints="0;1;0"
