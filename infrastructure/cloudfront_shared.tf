@@ -50,7 +50,7 @@ resource "aws_cloudfront_response_headers_policy" "security" {
     }
 
     frame_options {
-      frame_option = "DENY"
+      frame_option = "SAMEORIGIN"
       override     = true
     }
 
