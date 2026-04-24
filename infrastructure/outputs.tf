@@ -17,12 +17,11 @@ data "terraform_remote_state" "cicd" {
   backend = "s3"
 
   config = {
-    bucket         = "brad-duhon-terraform-state"
-    key            = "cicd/terraform.tfstate" # This matches Section 1 of your runbook
-    region         = "us-east-1"
-    use_lockfile   = true
-    encrypt        = true
-    kms_key_id     = "alias/brad-duhon-terraform-state"
+    bucket     = "brad-duhon-terraform-state"
+    key        = "cicd/terraform.tfstate"
+    region     = "us-east-1"
+    encrypt    = true
+    kms_key_id = "alias/brad-duhon-terraform-state"
   }
 }
 
