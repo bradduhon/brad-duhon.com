@@ -38,42 +38,65 @@ export async function GET(_ctx: APIContext) {
     slug: entry.slug,
   }));
 
-  // Tag nodes — deduplicated
-  const allTags = [...new Set(sorted.flatMap((e) => e.data.tags))].sort();
-  const tagNodes = allTags.map((tag) => ({
-    id: `tag-${tag}`,
-    type: 'tag' as const,
-    label: tag,
-  }));
+  // TAG NODES — commented out to remove from graph (code preserved for rollback)
+  // const allTags = [...new Set(sorted.flatMap((e) => e.data.tags))].sort();
+  // const tagNodes = allTags.map((tag) => ({
+  //   id: `tag-${tag}`,
+  //   type: 'tag' as const,
+  //   label: tag,
+  // }));
 
-  // Tag edges with per-article relevance scores
-  const tagEdges = sorted.flatMap((entry) => {
+  // TAG EDGES — commented out (code preserved for rollback)
+  // const tagEdges = sorted.flatMap((entry) => {
+  //   const fullText = entry.data.title + ' ' + entry.data.description + ' ' + (entry.body ?? '');
+  //   const rawCounts = entry.data.tags.map((tag) => ({
+  //     tag,
+  //     count: countRelevance(tag, fullText),
+  //   }));
+  //   const maxCount = Math.max(...rawCounts.map((t) => t.count), 1);
+  //   return rawCounts.map(({ tag, count }) => ({
+  //     source: `article-${entry.slug}`,
+  //     target: `tag-${tag}`,
+  //     kind: 'tag' as const,
+  //     relevance: count / maxCount,
+  //   }));
+  // });
+
+  // Top-3 tags per article by content relevance, used to compute relational strength.
+  // Rank 0 = most relevant. Strength between two articles for a shared tag = (3-rankA)*(3-rankB),
+  // so rank-0 matches score 9, rank-2 matches score 1. Total weight = sum across all shared top-3 tags.
+  // Max theoretical weight: 9+4+1 = 14 (all 3 top tags match at identical ranks).
+  const articleTop3 = sorted.map((entry) => {
     const fullText = entry.data.title + ' ' + entry.data.description + ' ' + (entry.body ?? '');
-    const rawCounts = entry.data.tags.map((tag) => ({
-      tag,
-      count: countRelevance(tag, fullText),
-    }));
-    const maxCount = Math.max(...rawCounts.map((t) => t.count), 1);
-
-    return rawCounts.map(({ tag, count }) => ({
-      source: `article-${entry.slug}`,
-      target: `tag-${tag}`,
-      kind: 'tag' as const,
-      relevance: count / maxCount, // normalized 0-1
-    }));
+    return entry.data.tags
+      .map((tag) => ({ tag, count: countRelevance(tag, fullText) }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3)
+      .map((s) => s.tag);
   });
 
-  // Semantic edges — articles sharing 2+ tags
-  const semanticEdges = [];
+  // Semantic edges — articles sharing at least one top-3 tag
+  const semanticEdges: Array<{
+    source: string;
+    target: string;
+    kind: 'related';
+    weight: number;
+  }> = [];
   for (let i = 0; i < sorted.length; i++) {
     for (let j = i + 1; j < sorted.length; j++) {
-      const shared = sorted[i].data.tags.filter((t) => sorted[j].data.tags.includes(t));
-      if (shared.length >= 2) {
+      let strength = 0;
+      for (const [rankA, tag] of articleTop3[i].entries()) {
+        const rankB = articleTop3[j].indexOf(tag);
+        if (rankB !== -1) {
+          strength += (3 - rankA) * (3 - rankB);
+        }
+      }
+      if (strength > 0) {
         semanticEdges.push({
           source: `article-${sorted[i].slug}`,
           target: `article-${sorted[j].slug}`,
           kind: 'related' as const,
-          weight: shared.length,
+          weight: strength,
         });
       }
     }
@@ -81,8 +104,9 @@ export async function GET(_ctx: APIContext) {
 
   return new Response(
     JSON.stringify({
-      nodes: [...articleNodes, ...tagNodes],
-      edges: [...tagEdges, ...semanticEdges],
+      nodes: articleNodes,
+      edges: semanticEdges,
+      // TAG RESTORE: nodes: [...articleNodes, ...tagNodes], edges: [...tagEdges, ...semanticEdges],
       initialCenter: articleNodes[0]?.id ?? null,
     }),
     { headers: { 'Content-Type': 'application/json' } }

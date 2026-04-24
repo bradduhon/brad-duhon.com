@@ -13,7 +13,7 @@ import {
 } from 'd3-force';
 import type { GraphData, GraphNode, GraphEdge, NodePosition } from './types';
 import EnvelopeNode from './EnvelopeNode';
-import TagNode from './TagNode';
+// import TagNode from './TagNode'; // TAG RESTORE: uncomment to re-enable tag nodes
 import PreviewCard from './PreviewCard';
 
 const HOVER_DELAY_MS = 600;
@@ -116,25 +116,27 @@ function getTopNeighborhood(
 // Edge clipping — find the point on a node's boundary toward another point
 // so lines terminate at the node surface, not its center.
 // ---------------------------------------------------------------------------
-const ARTICLE_CENTER_W = 180;
-const ARTICLE_CENTER_H = 80;
-const ARTICLE_NEIGHBOR_R = 18;
-const TAG_BASE_H = 22;
-const TAG_CHAR_W = 6.5;
-const TAG_BASE_FONT = 10;
-const TAG_PAD_X = 10;
+const ARTICLE_CENTER_W   = 180;
+const ARTICLE_CENTER_H   = 80;
+const ARTICLE_NEIGHBOR_W = 120;
+const ARTICLE_NEIGHBOR_H = 38;
+// const ARTICLE_NEIGHBOR_R = 18; // TAG RESTORE: was circle radius for neighbor nodes
 
-function getTagWidth(label: string, relevance: number): number {
-  const scale = 1 + relevance * 0.65;
-  const fontSize = Math.round(TAG_BASE_FONT * scale);
-  const padX = Math.round(TAG_PAD_X * scale);
-  return Math.max(label.length * (fontSize * TAG_CHAR_W / TAG_BASE_FONT) + padX * 2, 36);
-}
-
-function getTagHeight(relevance: number): number {
-  const scale = 1 + relevance * 0.65;
-  return Math.round(TAG_BASE_H * scale);
-}
+// TAG RESTORE: uncomment tag geometry helpers
+// const TAG_BASE_H    = 22;
+// const TAG_CHAR_W    = 6.5;
+// const TAG_BASE_FONT = 10;
+// const TAG_PAD_X     = 10;
+// function getTagWidth(label: string, relevance: number): number {
+//   const scale = 1 + relevance * 0.65;
+//   const fontSize = Math.round(TAG_BASE_FONT * scale);
+//   const padX = Math.round(TAG_PAD_X * scale);
+//   return Math.max(label.length * (fontSize * TAG_CHAR_W / TAG_BASE_FONT) + padX * 2, 36);
+// }
+// function getTagHeight(relevance: number): number {
+//   const scale = 1 + relevance * 0.65;
+//   return Math.round(TAG_BASE_H * scale);
+// }
 
 function clampToRect(cx: number, cy: number, hw: number, hh: number, tx: number, ty: number): [number, number] {
   const dx = tx - cx;
@@ -159,18 +161,20 @@ function getEdgeEndpoint(
   toPos: NodePosition,
   toNode: GraphNode,
   toIsCenter: boolean,
-  toRelevance: number
+  // toRelevance: number  // TAG RESTORE: re-add for tag pill sizing
 ): [number, number] {
-  if (toNode.type === 'article') {
-    if (toIsCenter) {
-      return clampToRect(toPos.x, toPos.y, ARTICLE_CENTER_W / 2, ARTICLE_CENTER_H / 2, fromPos.x, fromPos.y);
-    }
-    return clampToCircle(toPos.x, toPos.y, ARTICLE_NEIGHBOR_R, fromPos.x, fromPos.y);
+  if (toIsCenter) {
+    return clampToRect(toPos.x, toPos.y, ARTICLE_CENTER_W / 2, ARTICLE_CENTER_H / 2, fromPos.x, fromPos.y);
   }
-  // tag — pill treated as rect
-  const w = getTagWidth(toNode.label, toRelevance);
-  const h = getTagHeight(toRelevance);
-  return clampToRect(toPos.x, toPos.y, w / 2, h / 2, fromPos.x, fromPos.y);
+  return clampToRect(toPos.x, toPos.y, ARTICLE_NEIGHBOR_W / 2, ARTICLE_NEIGHBOR_H / 2, fromPos.x, fromPos.y);
+  // TAG RESTORE: add back tag pill clipping:
+  // if (toNode.type === 'article') {
+  //   if (toIsCenter) return clampToRect(...CENTER);
+  //   return clampToCircle(toPos.x, toPos.y, ARTICLE_NEIGHBOR_R, fromPos.x, fromPos.y);
+  // }
+  // const w = getTagWidth(toNode.label, toRelevance);
+  // const h = getTagHeight(toRelevance);
+  // return clampToRect(toPos.x, toPos.y, w / 2, h / 2, fromPos.x, fromPos.y);
 }
 
 // ---------------------------------------------------------------------------
@@ -268,7 +272,8 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
       .force('center', forceCenter(w / 2, h / 2).strength(0.03))
       .force(
         'collide',
-        forceCollide<GraphNode>().radius((d) => (d.type === 'article' ? 60 : 36))
+        // TAG RESTORE: forceCollide<GraphNode>().radius((d) => (d.type === 'article' ? 60 : 36))
+        forceCollide<GraphNode>().radius((d) => (d.id === centerId ? 95 : 65))
       )
       .alpha(0.9)
       .alphaDecay(0.016);
@@ -307,16 +312,16 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
     setPreviewNode((prev) => (prev?.id === node.id ? null : node));
   }, [clearHoverTimer, positions]);
 
-  // Get tag relevance for the current center article
-  const getTagRelevance = useCallback((tagNodeId: string): number => {
-    if (!graphData) return 0;
-    const center = graphData.nodes.find((n) => n.id === centerId);
-    if (!center || center.type !== 'article') return 0;
-    const edge = graphData.edges.find(
-      (e) => resolveId(e.source) === centerId && resolveId(e.target) === tagNodeId && e.kind === 'tag'
-    );
-    return edge?.relevance ?? 0;
-  }, [graphData, centerId]);
+  // TAG RESTORE: uncomment getTagRelevance for tag node sizing
+  // const getTagRelevance = useCallback((tagNodeId: string): number => {
+  //   if (!graphData) return 0;
+  //   const center = graphData.nodes.find((n) => n.id === centerId);
+  //   if (!center || center.type !== 'article') return 0;
+  //   const edge = graphData.edges.find(
+  //     (e) => resolveId(e.source) === centerId && resolveId(e.target) === tagNodeId && e.kind === 'tag'
+  //   );
+  //   return edge?.relevance ?? 0;
+  // }, [graphData, centerId]);
 
   if (!graphData) {
     return (
@@ -348,20 +353,20 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
           const tNode = visibleNodes.find((n) => n.id === tid);
           if (!sNode || !tNode) return null;
 
-          const sRel = getTagRelevance(sid);
-          const tRel = getTagRelevance(tid);
+          // TAG RESTORE: pass sRel/tRel from getTagRelevance() as 5th arg to getEdgeEndpoint
+          const [x1, y1] = getEdgeEndpoint(tp, sp, sNode, sid === centerId);
+          const [x2, y2] = getEdgeEndpoint(sp, tp, tNode, tid === centerId);
 
-          const [x1, y1] = getEdgeEndpoint(tp, sp, sNode, sid === centerId, sRel);
-          const [x2, y2] = getEdgeEndpoint(sp, tp, tNode, tid === centerId, tRel);
-
-          const isRelated = edge.kind === 'related';
+          // Weight range: 1 (single rank-2 match) to 14 (all 3 top tags match).
+          // Map to stroke-width 0.8-3.5px so stronger correlations visually pop.
+          const strokeWidth = Math.min(0.8 + (edge.weight ?? 1) * 0.22, 3.5);
           return (
             <line
               key={`e-${i}`}
               x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="#D6D3D1"
-              stroke-width={isRelated ? Math.min((edge.weight ?? 1) * 0.7 + 0.4, 2.2) : 0.8}
-              opacity={isRelated ? 0.75 : 0.45}
+              stroke="#D97706"
+              stroke-width={strokeWidth}
+              opacity={0.3 + Math.min((edge.weight ?? 1) / 14, 1) * 0.45}
             />
           );
         })}
@@ -387,20 +392,22 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
             );
           }
 
-          const relevance = getTagRelevance(node.id);
-          return (
-            <TagNode
-              key={node.id}
-              node={node}
-              isCenter={isCenter}
-              relevance={relevance}
-              x={pos.x}
-              y={pos.y}
-              onMouseEnter={() => handleNodeMouseEnter(node.id)}
-              onMouseLeave={clearHoverTimer}
-              onClick={(e) => handleNodeClick(node, e as Event)}
-            />
-          );
+          // TAG RESTORE: uncomment TagNode rendering
+          // const relevance = getTagRelevance(node.id);
+          // return (
+          //   <TagNode
+          //     key={node.id}
+          //     node={node}
+          //     isCenter={isCenter}
+          //     relevance={relevance}
+          //     x={pos.x}
+          //     y={pos.y}
+          //     onMouseEnter={() => handleNodeMouseEnter(node.id)}
+          //     onMouseLeave={clearHoverTimer}
+          //     onClick={(e) => handleNodeClick(node, e as Event)}
+          //   />
+          // );
+          return null;
         })}
       </svg>
 
