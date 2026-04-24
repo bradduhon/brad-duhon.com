@@ -10,12 +10,13 @@ data "aws_s3_bucket" "terraform_state" {
   bucket = "${local.project}-terraform-state"
 }
 
-data "aws_dynamodb_table" "terraform_locks" {
-  name = "${local.project}-terraform-locks"
-}
-
-data "aws_kms_alias" "terraform_state" {
-  name = "alias/${local.project}-terraform-state"
+# ARNs for bootstrap-created resources computed from naming convention.
+# Avoids data source lookups (dynamodb:DescribeTable, kms:ListAliases) that
+# would create an IAM self-update deadlock when this role is missing those
+# permissions. The naming convention is authoritative — see bootstrap/main.tf.
+locals {
+  terraform_locks_table_arn      = "arn:${data.aws_partition.current.partition}:dynamodb:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:table/${local.project}-terraform-locks"
+  terraform_state_kms_alias_arn  = "arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:alias/${local.project}-terraform-state"
 }
 
 # ---------------------------------------------------------------------------
@@ -207,11 +208,14 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable", # required to refresh data.aws_dynamodb_table
+      "dynamodb:DescribeTable", # S3 backend calls this during init to verify the lock table exists
     ]
-    resources = [data.aws_dynamodb_table.terraform_locks.arn]
+    resources = [local.terraform_locks_table_arn]
   }
 
+  # kms:ResourceAliases is evaluated against the key's configured aliases,
+  # not the access method — works whether S3 or Terraform uses the key ARN
+  # directly or via alias. Avoids needing the exact key ARN at policy-write time.
   statement {
     sid    = "StateKMS"
     effect = "Allow"
@@ -220,7 +224,12 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "kms:GenerateDataKey",
       "kms:DescribeKey",
     ]
-    resources = [data.aws_kms_alias.terraform_state.target_key_arn]
+    resources = ["arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "kms:ResourceAliases"
+      values   = ["alias/${local.project}-terraform-state"]
+    }
   }
 
   # S3 — read current bucket configuration
@@ -417,11 +426,14 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "dynamodb:GetItem",
       "dynamodb:PutItem",
       "dynamodb:DeleteItem",
-      "dynamodb:DescribeTable", # required to refresh data.aws_dynamodb_table
+      "dynamodb:DescribeTable", # S3 backend calls this during init to verify the lock table exists
     ]
-    resources = [data.aws_dynamodb_table.terraform_locks.arn]
+    resources = [local.terraform_locks_table_arn]
   }
 
+  # kms:ResourceAliases is evaluated against the key's configured aliases,
+  # not the access method — works whether S3 or Terraform uses the key ARN
+  # directly or via alias. Avoids needing the exact key ARN at policy-write time.
   statement {
     sid    = "StateKMS"
     effect = "Allow"
@@ -430,7 +442,12 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "kms:GenerateDataKey",
       "kms:DescribeKey",
     ]
-    resources = [data.aws_kms_alias.terraform_state.target_key_arn]
+    resources = ["arn:${data.aws_partition.current.partition}:kms:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:key/*"]
+    condition {
+      test     = "ForAnyValue:StringLike"
+      variable = "kms:ResourceAliases"
+      values   = ["alias/${local.project}-terraform-state"]
+    }
   }
 
   # S3 — full management of project site buckets (scoped by name prefix)
