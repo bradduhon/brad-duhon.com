@@ -382,32 +382,24 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
 
           // sqrt(weight / max) spreads low values apart so weak/medium/strong are visually distinct.
           const t = Math.sqrt((edge.weight ?? 1) / maxVisibleWeight);
-          const strokeWidth  = 0.6 + t * 3.5;         // 0.6px to 4.1px base wire
-          const baseOpacity  = 0.03 + t * 0.35;       // 0.03 (ghost) to 0.38 (visible track)
-          const orbOpacity   = 0.55 + t * 0.45;       // 0.55 to 1.0
-          const orbR         = 2 + t * 3.5;           // 2px to 5.5px radius
+
+          // Speed is the primary strength indicator: strong = fast, weak = slow.
+          // Size and opacity reinforce. No base wire — the repeated travel path implies the connection.
+          const baseDur  = 2 + (1 - t) * 4;                          // 2s (strong) → 6s (weak)
+          const duration = baseDur + (stableHash(sid + tid) % 15) / 10; // +0–1.5s jitter
+          const orbR     = 2.5 + t * 4.5;                            // 2.5px → 7px
+          const orbOpacity = 0.25 + t * 0.75;                        // 0.25 → 1.0
 
           const dx  = x2 - x1;
           const dy  = y2 - y1;
           const len = Math.sqrt(dx * dx + dy * dy);
           if (len === 0) return null;
 
-          // Two orbs travel in opposite directions simultaneously — they meet in the
-          // middle and pass through each other, creating a ripple/signal wave feel.
-          // Duration varies per edge via stable hash so ripples stay out of phase.
-          const duration = 2.5 + (stableHash(sid + tid) % 30) / 10; // 2.5s – 5.5s
           const pathFwd = `M ${x1} ${y1} L ${x2} ${y2}`;
           const pathRev = `M ${x2} ${y2} L ${x1} ${y1}`;
 
           return (
             <g key={`e-${i}`}>
-              {/* Static base wire — faint track the orbs travel along */}
-              <line
-                x1={x1} y1={y1} x2={x2} y2={y2}
-                stroke="#D97706"
-                stroke-width={strokeWidth}
-                opacity={baseOpacity}
-              />
               {/* Orb A: travels source → target → source */}
               <circle r={orbR} fill="#FCD34D" filter="url(#orb-glow)" opacity={orbOpacity}>
                 <animateMotion
@@ -419,8 +411,8 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
                   calcMode="linear"
                 />
               </circle>
-              {/* Orb B: travels target → source → target (counter-direction) */}
-              <circle r={orbR * 0.7} fill="#FEF3C7" filter="url(#orb-glow)" opacity={orbOpacity * 0.7}>
+              {/* Orb B: counter-direction, slightly smaller and softer */}
+              <circle r={orbR * 0.65} fill="#FEF3C7" filter="url(#orb-glow)" opacity={orbOpacity * 0.65}>
                 <animateMotion
                   path={pathRev}
                   dur={`${duration}s`}
