@@ -371,16 +371,28 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
 
           // sqrt(weight / max) spreads low values apart so weak/medium/strong are visually distinct.
           const t = Math.sqrt((edge.weight ?? 1) / maxVisibleWeight);
-          const strokeWidth = 0.6 + t * 4.4;                    // 0.6px to 5px
-          const opacity     = 0.15 + t * 0.75;                  // 0.15 to 0.90
-          const dashGap     = Math.round(14 - t * 13);           // 14 (sparse) to 1 (near-solid)
+          const strokeWidth = 0.6 + t * 4.4;    // 0.6px to 5px
+          const opacity     = 0.15 + t * 0.75;  // 0.15 to 0.90
+
+          // Quadratic bezier: control point is offset perpendicular to the midpoint.
+          // Curvature scales with edge length so short edges stay subtle.
+          const mx  = (x1 + x2) / 2;
+          const my  = (y1 + y2) / 2;
+          const dx  = x2 - x1;
+          const dy  = y2 - y1;
+          const len = Math.sqrt(dx * dx + dy * dy);
+          if (len === 0) return null;
+          const curve   = len * 0.12;
+          const cpx = mx - (dy / len) * curve;
+          const cpy = my + (dx / len) * curve;
+
           return (
-            <line
+            <path
               key={`e-${i}`}
-              x1={x1} y1={y1} x2={x2} y2={y2}
+              d={`M ${x1} ${y1} Q ${cpx} ${cpy} ${x2} ${y2}`}
+              fill="none"
               stroke="#D97706"
               stroke-width={strokeWidth}
-              stroke-dasharray={`5 ${dashGap}`}
               opacity={opacity}
             />
           );
