@@ -343,6 +343,9 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
   const { visibleNodes, visibleEdges } = getTopNeighborhood(centerId, graphData.nodes, graphData.edges);
   const { w, h } = dimensions;
 
+  // Normalize edge weights to the visible set's max so the full visual range is always used.
+  const maxVisibleWeight = visibleEdges.reduce((m, e) => Math.max(m, e.weight ?? 1), 1);
+
   return (
     <div ref={containerRef} style={{ position: 'absolute', inset: 0 }}>
       <svg
@@ -366,13 +369,11 @@ export default function KnowledgeGraph({ initialCenterId }: Props) {
           const [x1, y1] = getEdgeEndpoint(tp, sp, sNode, sid === centerId);
           const [x2, y2] = getEdgeEndpoint(sp, tp, tNode, tid === centerId);
 
-          // t: normalized relationship strength 0-1 (weight range 1-14)
-          // Three channels encode strength: thickness, opacity, dash density.
-          // Weak = thin + faint + sparse dashes; strong = thick + solid + dense dashes.
-          const t = Math.min((edge.weight ?? 1) / 14, 1);
-          const strokeWidth  = 1 + t * 3;                       // 1px to 4px
-          const opacity      = 0.25 + t * 0.55;                 // 0.25 to 0.80
-          const dashGap      = Math.round(12 - t * 10);         // 12 (sparse) to 2 (dense)
+          // sqrt(weight / max) spreads low values apart so weak/medium/strong are visually distinct.
+          const t = Math.sqrt((edge.weight ?? 1) / maxVisibleWeight);
+          const strokeWidth = 0.6 + t * 4.4;                    // 0.6px to 5px
+          const opacity     = 0.15 + t * 0.75;                  // 0.15 to 0.90
+          const dashGap     = Math.round(14 - t * 13);           // 14 (sparse) to 1 (near-solid)
           return (
             <line
               key={`e-${i}`}
