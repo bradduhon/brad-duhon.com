@@ -14,9 +14,10 @@ interface Props {
   onClick: (e?: Event) => void;
 }
 
-const CENTER_W  = 180;
-const CENTER_H  = 80;
-const RADIUS    = 18;   // neighbor circle radius
+const CENTER_W    = 180;
+const CENTER_H    = 80;
+const NEIGHBOR_W  = 120;
+const NEIGHBOR_H  = 38;
 
 export default function EnvelopeNode({ node, isCenter, x, y, onMouseEnter, onMouseLeave, onClick }: Props) {
   if (isCenter) {
@@ -70,18 +71,40 @@ export default function EnvelopeNode({ node, isCenter, x, y, onMouseEnter, onMou
     );
   }
 
-  // Neighbor — small circle with thin amber ring
+  // Neighbor — small labeled box
   return (
     <g
-      transform={`translate(${x}, ${y})`}
+      transform={`translate(${x - NEIGHBOR_W / 2}, ${y - NEIGHBOR_H / 2})`}
       style={{ cursor: 'pointer' }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       onClick={onClick}
     >
-      <circle r={RADIUS} fill="#FAFAF9" stroke="#D97706" stroke-width="1" />
-      {/* Small dot center to indicate it's an article */}
-      <circle r="3" fill="#D97706" opacity="0.5" />
+      <rect
+        width={NEIGHBOR_W}
+        height={NEIGHBOR_H}
+        rx="5"
+        fill="#FAFAF9"
+        stroke="#D97706"
+        stroke-width="0.75"
+      />
+      <foreignObject x="6" y="5" width={NEIGHBOR_W - 12} height={NEIGHBOR_H - 10}>
+        <div
+          xmlns="http://www.w3.org/1999/xhtml"
+          style={{
+            fontSize: '8px',
+            fontWeight: '500',
+            color: '#44403C',
+            lineHeight: '1.3',
+            overflow: 'hidden',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+          }}
+        >
+          {node.label}
+        </div>
+      </foreignObject>
     </g>
   );
 }
