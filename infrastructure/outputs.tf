@@ -11,6 +11,20 @@
 #   5. main_cloudfront_id -> GitHub repo secret: MAIN_CLOUDFRONT_ID
 #   6. lab_cloudfront_id -> GitHub repo secret: LAB_CLOUDFRONT_ID
 # ---------------------------------------------------------------------------
+# This block allows the main workspace to read the outputs 
+# from the cicd workspace state file in S3.
+data "terraform_remote_state" "cicd" {
+  backend = "s3"
+
+  config = {
+    bucket     = "brad-duhon-terraform-state"
+    key        = "cicd/terraform.tfstate"
+    region     = "us-east-1"
+    encrypt    = true
+    kms_key_id = "alias/brad-duhon-terraform-state"
+  }
+}
+
 
 output "route53_nameservers" {
   description = "Set these as NS records at your domain registrar to delegate brad-duhon.com to Route 53"
@@ -51,7 +65,17 @@ output "lab_cloudfront_domain" {
 
 output "site_deploy_role_arn" {
   description = "IAM role ARN for site deploys — GitHub secret: AWS_ROLE_ARN"
-  value       = aws_iam_role.site_deploy.arn
+  value       = data.terraform_remote_state.cicd.outputs.site_deploy_role_arn
+}
+
+output "terraform_apply_role_arn" {
+  description = "IAM role for terraform apply — GitHub secret: TF_APPLY_ROLE_ARN"
+  value       = data.terraform_remote_state.cicd.outputs.terraform_apply_role_arn
+}
+
+output "terraform_plan_role_arn" {
+  description = "IAM role for terraform plan — GitHub secret: TF_PLAN_ROLE_ARN"
+  value       = data.terraform_remote_state.cicd.outputs.terraform_plan_role_arn
 }
 
 output "site_kms_key_arn" {
