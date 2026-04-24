@@ -236,6 +236,7 @@ data "aws_iam_policy_document" "terraform_plan_permissions" {
       "s3:GetLifecycleConfiguration",
       "s3:GetBucketTagging",
       "s3:GetBucketLocation",
+      "s3:GetBucketAcl",
       "s3:ListBucket",
     ]
     resources = [
@@ -444,6 +445,7 @@ data "aws_iam_policy_document" "terraform_apply_permissions" {
       "s3:GetBucketTagging",
       "s3:PutBucketTagging",
       "s3:GetBucketLocation",
+      "s3:GetBucketAcl",
       "s3:ListBucket",
     ]
     resources = ["arn:${data.aws_partition.current.partition}:s3:::${local.project}-*"]
