@@ -520,12 +520,6 @@ Verify:
 terraform output site_deploy_role_arn
 ```
 
-### Knowledge graph not centered / nodes clustered off to one side
-
-The Preact island uses a `ResizeObserver` to measure its container. If the browser paints
-before the observer fires, the simulation runs with default dimensions (800x520) and nodes
-settle at the wrong center. A hard refresh (`Ctrl+Shift+R`) forces a clean remeasure.
-
 ---
 
 ## Design system reference

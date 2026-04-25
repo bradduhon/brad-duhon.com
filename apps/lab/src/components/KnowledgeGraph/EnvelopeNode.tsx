@@ -84,9 +84,9 @@ export default function EnvelopeNode({ node, isCenter, x, y, onMouseEnter, onMou
         width={NEIGHBOR_W}
         height={NEIGHBOR_H}
         rx="5"
-        fill="#FAFAF9"
+        fill="#FEF9EE"
         stroke="#D97706"
-        stroke-width="0.75"
+        stroke-width="1"
       />
       <foreignObject x="6" y="5" width={NEIGHBOR_W - 12} height={NEIGHBOR_H - 10}>
         <div
