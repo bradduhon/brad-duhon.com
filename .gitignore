@@ -24,6 +24,9 @@ Thumbs.db
 .vscode/settings.json
 .idea/
 
+# Claude local data -- personal, not for commit
+.claude/voice-profile.md
+
 # Secrets — never commit these
 *.env
 .env.*
