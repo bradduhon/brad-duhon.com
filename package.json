@@ -15,7 +15,6 @@
     "turbo": "^2.0.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "sharp"],
-    "approvedBuilds": ["esbuild@0.25.12", "esbuild@0.27.7", "sharp@0.34.5"]
+    "onlyBuiltDependencies": ["esbuild", "sharp"]
   }
 }
