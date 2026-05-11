@@ -50,6 +50,14 @@ function getTopNeighborhood(
   nodes: GraphNode[],
   edges: GraphEdge[]
 ) {
+  // Small graph: skip neighborhood pruning and show everything.
+  if (nodes.length <= MAX_NODES) {
+    const scores = new Map<string, number>(
+      nodes.map((n) => [n.id, n.id === centerId ? Infinity : 0])
+    );
+    return { visibleNodes: nodes, visibleEdges: edges, scores };
+  }
+
   // Build adjacency: id -> [{neighborId, edge}]
   const adj = new Map<string, Array<{ id: string; edge: GraphEdge }>>();
   nodes.forEach((n) => adj.set(n.id, []));
