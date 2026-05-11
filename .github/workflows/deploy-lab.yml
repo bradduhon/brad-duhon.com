@@ -7,6 +7,9 @@ on:
       - "apps/lab/**"
       - "packages/shared-ui/**"
       - ".github/workflows/deploy-lab.yml"
+      - "pnpm-workspace.yaml"
+      - "package.json"
+  workflow_dispatch:
 
 permissions:
   id-token: write  # Required for OIDC
