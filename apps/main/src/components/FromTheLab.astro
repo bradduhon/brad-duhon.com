@@ -3,7 +3,7 @@
 // Confidential and Proprietary.
 // Unauthorized copying of this file is strictly prohibited.
 
-const modules = import.meta.glob('../../lab/src/content/entries/*.md', { eager: true });
+const modules = import.meta.glob('../../../lab/src/content/entries/*.md', { eager: true });
 
 const entries = Object.entries(modules)
   .map(([path, mod]: [string, any]) => ({
