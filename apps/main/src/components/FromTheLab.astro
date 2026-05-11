@@ -3,15 +3,16 @@
 // Confidential and Proprietary.
 // Unauthorized copying of this file is strictly prohibited.
 
-const entries = [
-  {
-    title: 'Building brad-duhon.com: design decisions, wrong turns, and the reasoning behind the stack',
-    date: '2026-04-17',
-    description: 'A walkthrough of the decisions, pivots, and gotchas that went into building this site - from infrastructure to accessibility to why we ended up with Preact instead of React.',
-    tags: ['astro', 'terraform', 'aws', 'security'],
-    slug: 'building-brad-duhon-com',
-  },
-];
+const modules = import.meta.glob('../../lab/src/content/entries/*.md', { eager: true });
+
+const entries = Object.entries(modules)
+  .map(([path, mod]: [string, any]) => ({
+    slug: path.split('/').pop()!.replace('.md', ''),
+    ...mod.frontmatter,
+  }))
+  .filter((e) => !e.draft)
+  .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  .slice(0, 3);
 ---
 
 <section id="lab" class="max-w-3xl mx-auto px-6 py-16 border-t border-amber-light">
@@ -37,7 +38,7 @@ const entries = [
           <span class="text-sm font-semibold text-site-heading group-hover:text-amber-dark transition-colors leading-snug">
             {entry.title}
           </span>
-          <span class="text-xs text-site-muted">{entry.date}</span>
+          <span class="text-xs text-site-muted">{new Date(entry.date).toISOString().slice(0, 10)}</span>
           <p class="text-sm text-site-muted leading-relaxed">{entry.description}</p>
           <ul class="flex flex-wrap gap-1.5">
             {entry.tags.map((tag) => (
